@@ -1,0 +1,33 @@
+{
+  "name": "jiangxuewen16/swoole-grpc",
+  "description": "swoole grpc server client",
+  "license": "Apache-2.0",
+  "keywords": [
+    "php",
+    "swoole",
+    "coroutine",
+    "grpc",
+    "etcd",
+    "http",
+    "http2",
+    "client"
+  ],
+  "authors": [
+    {
+      "name": "jiangxuewen16",
+      "email": "445251692@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1",
+    "google/protobuf": "^3"
+  },
+  "autoload": {
+    "psr-4": {
+      "swoole\\grpc\\": "src"
+    },
+    "files": [
+      "src/include/functions.php"
+    ]
+  }
+}
