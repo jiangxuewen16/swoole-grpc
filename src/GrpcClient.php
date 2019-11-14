@@ -18,7 +18,7 @@ class GrpcClient extends BaseStub
     public function __construct()
     {
         //todo: address form consul
-        $address = '127.0.0.1:50051';
+        $address = '127.0.0.1:18306';
         parent::__construct($address, []);
     }
 
@@ -31,19 +31,13 @@ class GrpcClient extends BaseStub
      */
     public function getService(string $route, Message $argument, string $responseDecodeClass)
     {
-        $result = null;
-        go(function () use ($route, $argument, $responseDecodeClass, &$result) {
-            $this->start();
-            [$reply, $status] = $this->_simpleRequest($route, $argument, [$responseDecodeClass, 'decode']);
-            if ($status !== 0) {
-                throw new \RuntimeException('服务请求失败！' . $status);
-            }
+        $this->start();
+        [$reply, $status] = $this->_simpleRequest($route, $argument, [$responseDecodeClass, 'decode']);
+        if ($status !== 0) {
+            throw new \RuntimeException('服务请求失败！' . $status);
+        }
+        $this->close();
 
-            $result = $reply;
-            $this->close();
-
-        });
-        swoole_event::wait();
-        return $result;
+        return $reply;
     }
 }

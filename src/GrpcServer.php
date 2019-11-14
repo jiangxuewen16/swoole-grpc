@@ -21,7 +21,7 @@ class GrpcServer
     ];
     private $routeList = [];        //grpc路由列表
 
-    private const SWOOLE_CLOSE = '>>>SWOOLE|CLOSE<<<';          //swoole结束字符
+    public const SWOOLE_CLOSE = '>>>SWOOLE|CLOSE<<<';          //swoole结束字符
 
     /**
      * GrpcServer constructor.
