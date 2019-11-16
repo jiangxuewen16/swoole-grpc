@@ -3,8 +3,9 @@
 
 namespace swoole\grpc;
 
-use swoole\grpc\Grpc\Health\V1\HealthCheckResponse;
-use swoole\grpc\Grpc\Health\V1\HealthCheckResponse_ServingStatus;
+
+use Grpc\Health\V1\HealthCheckResponse;
+use Grpc\Health\V1\HealthCheckResponse_ServingStatus;
 
 class GrpcConsulService
 {
@@ -17,9 +18,6 @@ class GrpcConsulService
     private $timeout;
     private $interval;
     private $appId;
-
-    private $ip;
-    private $port;
 
 
     /**
@@ -46,8 +44,7 @@ class GrpcConsulService
      */
     public function getCheckInfo(string $routeUrl, string $ip, int $port): array
     {
-        $url = $this->getCheckUrl($routeUrl);
-        $grpcCheck = sprintf('%s:%s%s', $ip, $port, $url);
+        $grpcCheck = sprintf('%s:%s/%s', $ip, $port, $routeUrl);
         return [
             'ID' => $this->appId,
             'Name' => $routeUrl,
@@ -59,26 +56,6 @@ class GrpcConsulService
             'Timeout' => $this->timeout,
             'Interval' => $this->interval
         ];
-    }
-
-    /**
-     * 获取监测url
-     * @param string $routeUrl
-     * @return string
-     */
-    private function getCheckUrl(string $routeUrl): string
-    {
-        return self::HEALTH_PATH . $routeUrl;
-    }
-
-    /**
-     * 获取需要检查的grpc服务地址
-     * @param $routeUrl
-     * @return string
-     */
-    public function getGrpcServiceUrl($routeUrl): string
-    {
-        return str_replace(self::HEALTH_PATH, '', $routeUrl);
     }
 
     /**
