@@ -40,7 +40,7 @@ class HealthCheckResponse extends \Google\Protobuf\Internal\Message
      */
     public function setStatus($var)
     {
-        GPBUtil::checkEnum($var, \Grpc\Health\V1\HealthCheckResponse_ServingStatus::class);
+        GPBUtil::checkEnum($var, HealthCheckResponse_ServingStatus::class);
         $this->status = $var;
 
         return $this;
