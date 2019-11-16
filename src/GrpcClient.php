@@ -40,4 +40,8 @@ class GrpcClient extends BaseStub
 
         return $reply;
     }
+
+    private function getServiceAddr(){
+        $this->health->service('$routeUrl:/', ['tag' => '/helloworld.Greeter/SayHello', ])->getResult();
+    }
 }
