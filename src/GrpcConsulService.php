@@ -6,47 +6,52 @@ namespace swoole\grpc;
 use swoole\grpc\Grpc\Health\V1\HealthCheckResponse;
 use swoole\grpc\Grpc\Health\V1\HealthCheckResponse_ServingStatus;
 
-class GrpcServiceHealth
+class GrpcConsulService
 {
     public const HEALTH_PATH = '/grpc.health.v1.Health/Check';
     public const UNKNOWN = HealthCheckResponse_ServingStatus::UNKNOWN;
     public const SERVING = HealthCheckResponse_ServingStatus::SERVING;
     public const NOT_SERVING = HealthCheckResponse_ServingStatus::NOT_SERVING;
 
-    public $deregisterCriticalServiceAfter = '3s';
-    public $timeout = '3s';
-    public $interval = '10s';
+    private $deregisterCriticalServiceAfter;
+    private $timeout;
+    private $interval;
+    private $appId;
+
+    private $ip;
+    private $port;
+
 
     /**
-     * GrpcServiceHealth constructor.
+     * GrpcConsulService constructor.
      * @param string $deregisterCriticalServiceAfter
      * @param string $timeout
      * @param string $interval
+     * @param string|null $appId
      */
-    public function __construct(string $deregisterCriticalServiceAfter, string $timeout, string $interval)
+    public function __construct(string $deregisterCriticalServiceAfter, string $timeout, string $interval, string $appId = null)
     {
         $this->deregisterCriticalServiceAfter = $deregisterCriticalServiceAfter;
         $this->timeout = $timeout;
         $this->interval = $interval;
+        $this->appId = $appId ?: md5(uniqid(microtime(true),true));
     }
 
     /**
      * 获取服务监测的信息
      * @param string $routeUrl
      * @param string $ip
-     * @param string $port
+     * @param int $port
      * @return array
      */
-    public function getCheckInfo(string $routeUrl, string $ip, string $port): array
+    public function getCheckInfo(string $routeUrl, string $ip, int $port): array
     {
         $url = $this->getCheckUrl($routeUrl);
         $grpcCheck = sprintf('%s:%s%s', $ip, $port, $url);
         return [
-            'ID' => $routeUrl,
+            'ID' => $this->appId,
             'Name' => $routeUrl,
             'DeregisterCriticalServiceAfter' => $this->deregisterCriticalServiceAfter,
-            #'HTTP' => sprintf('http://%s:%s%s', $localIps[0], $port, '/grpc.health.v1.Health/Check'),
-            #'HTTP' => sprintf('http://%s:%s', $localIps[0], $port),
             'GRPC' => $grpcCheck,
             #'Method' => 'POST',
             #'Header' => ['server-path' => [$routeUrl]],
@@ -86,6 +91,23 @@ class GrpcServiceHealth
         $responseMessage = new HealthCheckResponse();
         $responseMessage->setStatus($status);
         return Parser::serializeMessage($responseMessage);
+    }
+
+    public function getServiceRegisterInfo(string $routeUrl, string $ip, int $port, array $meta = [], array $weights = []): array
+    {
+        $serviceName = str_replace('/', '.', ltrim($routeUrl, '/'));
+        return [
+            'ID' => $this->appId,
+            'Name' => $serviceName,
+            'Tags' => [
+                'HTTP', 'GRPC', $routeUrl
+            ],
+            'Address' => $ip,
+            'Port' => $port,
+            'Meta' => $meta,
+            'EnableTagOverride' => true,
+            'Weights' => $weights,
+        ];
     }
 
 }
