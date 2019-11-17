@@ -88,7 +88,12 @@ class GrpcConsulService
         ];
     }
 
-    public function parserHealthRequestBody(string $requestBody)
+    /**
+     * 解析健康检查请求数据
+     * @param string $requestBody
+     * @return HealthCheckRequest
+     */
+    public function parserHealthRequestBody(string $requestBody): HealthCheckRequest
     {
         return Parser::deserializeMessage([HealthCheckRequest::class, null], $requestBody);
     }
