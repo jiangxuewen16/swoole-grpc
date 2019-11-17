@@ -9,6 +9,7 @@ use Google\Protobuf\Internal\Message;
 use Swoft\Consul\Exception\ClientException;
 use Swoft\Consul\Exception\ServerException;
 use Swoft\Consul\Health;
+use Swoole\Coroutine;
 
 class GrpcClient extends BaseStub
 {
@@ -36,7 +37,7 @@ class GrpcClient extends BaseStub
      * @return Message|mixed|
      * @throws Exception
      */
-    public function getService(string $route, Message $argument, string $responseDecodeClass)
+    private function request(string $route, Message $argument, string $responseDecodeClass)
     {
         $this->start();
         [$reply, $status] = $this->_simpleRequest($route, $argument, [$responseDecodeClass, 'decode']);
@@ -46,6 +47,23 @@ class GrpcClient extends BaseStub
         $this->close();
 
         return $reply;
+    }
+
+    public function getService(string $grpcRoute, $requestObj, string $responseDecodeClass)
+    {
+        $channel = new Coroutine\Channel(1);
+
+        go(static function () use ($channel, $grpcRoute, $requestObj, $responseDecodeClass) {
+            $responseData = $this->request($grpcRoute, $requestObj, $responseDecodeClass);
+            $channel->push($responseData);
+        });
+
+        $result = $channel->pop(3.0);
+        if ($result === false) {
+            throw new \RuntimeException('服务请求失败！');
+        }
+
+        return $result;
     }
 
     /**

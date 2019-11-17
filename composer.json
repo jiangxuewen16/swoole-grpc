@@ -23,6 +23,9 @@
     "google/protobuf": "^3",
     "swoft/consul": "~2.0.0"
   },
+  "require-dev": {
+    "swoft/swoole-ide-helper": "dev-master"
+  },
   "autoload": {
     "psr-4": {
       "swoole\\grpc\\": "src"
