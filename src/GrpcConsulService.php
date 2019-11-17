@@ -73,7 +73,7 @@ class GrpcConsulService
 
     public function getServiceRegisterInfo(string $routeUrl, string $ip, int $port, array $meta = [], array $weights = []): array
     {
-        $serviceName = str_replace('/', '.', ltrim($routeUrl, '/'));
+        $serviceName = self::parseGrpcRoute($routeUrl);
         return [
             'ID' => $this->getAppId($ip, $routeUrl),
             'Name' => $serviceName,
@@ -106,7 +106,12 @@ class GrpcConsulService
      */
     private function getAppId(string $ip, string $route): string
     {
-        return $this->appId ?:md5($ip . $route);
+        return $this->appId ?: md5($ip . $route);
+    }
+
+    public static function parseGrpcRoute($routeUrl): string
+    {
+        return str_replace('/', '.', ltrim($routeUrl, '/'));
     }
 
 }

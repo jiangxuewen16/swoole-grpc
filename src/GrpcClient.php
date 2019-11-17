@@ -14,6 +14,8 @@ use Swoole\Coroutine;
 class GrpcClient extends BaseStub
 {
 
+    private $grpcRoute;
+
     /**
      * GrpcClient constructor.
      * @param string $route
@@ -24,7 +26,9 @@ class GrpcClient extends BaseStub
     public function __construct(string $route, Health $consulHealth)
     {
         //todo: address form consul
-        $services = $this->getServiceAddr($route, $consulHealth);
+        $grpcRoute = GrpcConsulService::parseGrpcRoute($route);
+        $this->grpcRoute = $grpcRoute;
+        $services = $this->getServiceAddr($this->grpcRoute, $consulHealth);
         $address = $services['Service']['Address'];
         $port = $services['Service']['Port'];
         parent::__construct(sprintf('%s:%s', $address, $port), []);
@@ -32,15 +36,14 @@ class GrpcClient extends BaseStub
 
     /**
      * @param Message $argument
-     * @param string $route
      * @param string $responseDecodeClass
      * @return Message|mixed|
      * @throws Exception
      */
-    private function request(string $route, Message $argument, string $responseDecodeClass)
+    private function request(Message $argument, string $responseDecodeClass)
     {
         $this->start();
-        [$reply, $status] = $this->_simpleRequest($route, $argument, [$responseDecodeClass, 'decode']);
+        [$reply, $status] = $this->_simpleRequest($this->grpcRoute, $argument, [$responseDecodeClass, 'decode']);
         if ($status !== 0) {
             throw new \RuntimeException('服务请求失败！' . $status);
         }
@@ -49,12 +52,12 @@ class GrpcClient extends BaseStub
         return $reply;
     }
 
-    public function getService(string $grpcRoute, $requestObj, string $responseDecodeClass)
+    public function getService($requestObj, string $responseDecodeClass)
     {
         $channel = new Coroutine\Channel(1);
 
-        go(static function () use ($channel, $grpcRoute, $requestObj, $responseDecodeClass) {
-            $responseData = $this->request($grpcRoute, $requestObj, $responseDecodeClass);
+        go(static function () use ($channel, $requestObj, $responseDecodeClass) {
+            $responseData = $this->request($requestObj, $responseDecodeClass);
             $channel->push($responseData);
         });
 
@@ -89,6 +92,6 @@ class GrpcClient extends BaseStub
      */
     private function lvs(array $services): array
     {
-        return $services[array_rand($services,1)];
+        return $services[array_rand($services, 1)];
     }
 }
