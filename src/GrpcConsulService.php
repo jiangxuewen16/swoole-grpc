@@ -4,6 +4,7 @@
 namespace swoole\grpc;
 
 
+use Grpc\Health\V1\HealthCheckRequest;
 use Grpc\Health\V1\HealthCheckResponse;
 use Grpc\Health\V1\HealthCheckResponse_ServingStatus;
 
@@ -32,7 +33,7 @@ class GrpcConsulService
         $this->deregisterCriticalServiceAfter = $deregisterCriticalServiceAfter;
         $this->timeout = $timeout;
         $this->interval = $interval;
-        $this->appId = $appId ?: md5(uniqid(microtime(true),true));
+        $this->appId = $appId ?: md5(uniqid(microtime(true), true));
     }
 
     /**
@@ -85,6 +86,11 @@ class GrpcConsulService
             'EnableTagOverride' => true,
             'Weights' => $weights,
         ];
+    }
+
+    public function parserHealthRequestBody(string $requestBody)
+    {
+        return Parser::deserializeMessage([HealthCheckRequest::class, null], $requestBody);
     }
 
 }
