@@ -33,7 +33,7 @@ class GrpcConsulService
         $this->deregisterCriticalServiceAfter = $deregisterCriticalServiceAfter;
         $this->timeout = $timeout;
         $this->interval = $interval;
-        $this->appId = $appId ?: md5(uniqid(microtime(true), true));
+        $this->appId = $appId;
     }
 
     /**
@@ -47,7 +47,7 @@ class GrpcConsulService
     {
         $grpcCheck = sprintf('%s:%s/%s', $ip, $port, $routeUrl);
         return [
-            'ID' => $this->appId,
+            'ID' => $this->appId || $this->getAppId($ip, $routeUrl),
             'Name' => $routeUrl,
             'DeregisterCriticalServiceAfter' => $this->deregisterCriticalServiceAfter,
             'GRPC' => $grpcCheck,
@@ -75,7 +75,7 @@ class GrpcConsulService
     {
         $serviceName = str_replace('/', '.', ltrim($routeUrl, '/'));
         return [
-            'ID' => $this->appId,
+            'ID' => $this->appId || $this->getAppId($ip, $routeUrl),
             'Name' => $serviceName,
             'Tags' => [
                 'HTTP', 'GRPC', $routeUrl
@@ -96,6 +96,17 @@ class GrpcConsulService
     public function parserHealthRequestBody(string $requestBody): HealthCheckRequest
     {
         return Parser::deserializeMessage([HealthCheckRequest::class, null], $requestBody);
+    }
+
+    /**
+     * 生成appid
+     * @param string $ip
+     * @param string $route
+     * @return string
+     */
+    private function getAppId(string $ip, string $route): string
+    {
+        return md5($ip, $route);
     }
 
 }
