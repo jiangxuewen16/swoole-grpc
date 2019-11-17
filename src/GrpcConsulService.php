@@ -47,7 +47,7 @@ class GrpcConsulService
     {
         $grpcCheck = sprintf('%s:%s/%s', $ip, $port, $routeUrl);
         return [
-            'ID' => $this->appId || $this->getAppId($ip, $routeUrl),
+            'ID' => $this->getAppId($ip, $routeUrl),
             'Name' => $routeUrl,
             'DeregisterCriticalServiceAfter' => $this->deregisterCriticalServiceAfter,
             'GRPC' => $grpcCheck,
@@ -75,7 +75,7 @@ class GrpcConsulService
     {
         $serviceName = str_replace('/', '.', ltrim($routeUrl, '/'));
         return [
-            'ID' => $this->appId || $this->getAppId($ip, $routeUrl),
+            'ID' => $this->getAppId($ip, $routeUrl),
             'Name' => $serviceName,
             'Tags' => [
                 'HTTP', 'GRPC', $routeUrl
@@ -106,7 +106,7 @@ class GrpcConsulService
      */
     private function getAppId(string $ip, string $route): string
     {
-        return md5($ip, $route);
+        return $this->appId ?:md5($ip, $route);
     }
 
 }
