@@ -106,7 +106,7 @@ class GrpcConsulService
      */
     private function getAppId(string $ip, string $route): string
     {
-        return $this->appId ?:md5($ip, $route);
+        return $this->appId ?:md5($ip . $route);
     }
 
 }
