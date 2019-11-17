@@ -6,27 +6,34 @@ namespace swoole\grpc;
 
 use Exception;
 use Google\Protobuf\Internal\Message;
-use Swoole\Coroutine as co;
-use swoole_event;
+use Swoft\Consul\Exception\ClientException;
+use Swoft\Consul\Exception\ServerException;
+use Swoft\Consul\Health;
 
 class GrpcClient extends BaseStub
 {
-    private $address;
-    private $port;
 
-
-    public function __construct()
+    /**
+     * GrpcClient constructor.
+     * @param string $route
+     * @param Health $consulHealth
+     * @throws ClientException
+     * @throws ServerException
+     */
+    public function __construct(string $route, Health $consulHealth)
     {
         //todo: address form consul
-        $address = '127.0.0.1:18306';
-        parent::__construct($address, []);
+        $services = $this->getServiceAddr($route, $consulHealth);
+        $address = $services['Service']['Address'];
+        $port = $services['Service']['Port'];
+        parent::__construct(sprintf('%s:%s', $address, $port), []);
     }
 
     /**
      * @param Message $argument
      * @param string $route
      * @param string $responseDecodeClass
-     * @return Message|\Grpc\StringifyAble|mixed|\swoole_http2_response
+     * @return Message|mixed|
      * @throws Exception
      */
     public function getService(string $route, Message $argument, string $responseDecodeClass)
@@ -41,7 +48,29 @@ class GrpcClient extends BaseStub
         return $reply;
     }
 
-    private function getServiceAddr(){
-        $this->health->service('$routeUrl:/', ['tag' => '/helloworld.Greeter/SayHello', ])->getResult();
+    /**
+     * @param string $route
+     * @param Health $consulHealth
+     * @return array|mixed
+     * @throws ClientException
+     * @throws ServerException
+     */
+    private function getServiceAddr(string $route, Health $consulHealth): array
+    {
+        $services = $consulHealth->service($route)->getResult();
+        if (empty($services)) {
+            throw new ServerException('无可用的服务');
+        }
+        return $this->lvs($services);
+    }
+
+    /**
+     * 均衡器 todo:需要实现更智能的均衡
+     * @param array $services
+     * @return array
+     */
+    private function lvs(array $services): array
+    {
+        return $services[array_rand($services,1)];
     }
 }

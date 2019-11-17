@@ -20,7 +20,8 @@
   ],
   "require": {
     "php": ">=7.1",
-    "google/protobuf": "^3"
+    "google/protobuf": "^3",
+    "swoft/consul": "~2.0.0"
   },
   "autoload": {
     "psr-4": {
