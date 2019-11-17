@@ -55,9 +55,9 @@ class GrpcClient extends BaseStub
     public function getService($requestObj, string $responseDecodeClass)
     {
         $channel = new Coroutine\Channel(1);
-
-        go(static function () use ($channel, $requestObj, $responseDecodeClass) {
-            $responseData = $this->request($requestObj, $responseDecodeClass);
+        $obj = $this;
+        go(static function () use ($obj, $channel, $requestObj, $responseDecodeClass) {
+            $responseData = $obj->request($requestObj, $responseDecodeClass);
             $channel->push($responseData);
         });
 
