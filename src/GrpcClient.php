@@ -26,9 +26,9 @@ class GrpcClient extends BaseStub
     public function __construct(string $route, Health $consulHealth)
     {
         //todo: address form consul
-        $grpcRoute = GrpcConsulService::parseGrpcRoute($route);
-        $this->grpcRoute = $grpcRoute;
-        $services = $this->getServiceAddr($this->grpcRoute, $consulHealth);
+        $grpcRouteName = GrpcConsulService::parseGrpcRoute($route);
+        $this->grpcRoute = $route;
+        $services = $this->getServiceAddr($grpcRouteName, $consulHealth);
         $address = $services['Service']['Address'];
         $port = $services['Service']['Port'];
         parent::__construct(sprintf('%s:%s', $address, $port), []);
