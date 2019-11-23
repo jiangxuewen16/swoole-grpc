@@ -59,6 +59,7 @@ class GrpcClient extends BaseStub
         go(static function () use ($obj, $channel, $requestObj, $responseDecodeClass) {
             $responseData = $obj->request($requestObj, $responseDecodeClass);
             $channel->push($responseData);
+            exit(200);
         });
 
         $result = $channel->pop(3.0);
