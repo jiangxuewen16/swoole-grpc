@@ -31,6 +31,7 @@ class GrpcClient extends BaseStub
         $services = $this->getServiceAddr($grpcRouteName, $consulHealth);
         $address = $services['Service']['Address'];
         $port = $services['Service']['Port'];
+        print_r('grpc请求地址：' . sprintf('%s:%s', $address, $port) . "\n");
         parent::__construct(sprintf('%s:%s', $address, $port), []);
     }
 
@@ -59,7 +60,6 @@ class GrpcClient extends BaseStub
         go(static function () use ($obj, $channel, $requestObj, $responseDecodeClass) {
             $responseData = $obj->request($requestObj, $responseDecodeClass);
             $channel->push($responseData);
-            exit(200);
         });
 
         $result = $channel->pop(3.0);
