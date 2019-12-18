@@ -44,15 +44,18 @@ class GrpcClient extends BaseStub
     private function request(Message $argument, string $responseDecodeClass)
     {
         $this->start();
-        [$reply, $status] = $this->_simpleRequest($this->grpcRoute, $argument, [$responseDecodeClass, 'decode']);
-        if ($status !== 0) {
-            throw new \RuntimeException('服务请求失败！' . $status);
-        }
+        $result = $this->_simpleRequest($this->grpcRoute, $argument, [$responseDecodeClass, 'decode']);
         $this->close();
 
-        return $reply;
+        return $result;
     }
 
+    /**
+     * @param $requestObj
+     * @param string $responseDecodeClass
+     * @return mixed
+     * @throws StatusRuntimeException
+     */
     public function getService($requestObj, string $responseDecodeClass)
     {
         $channel = new Coroutine\Channel(1);
@@ -64,10 +67,14 @@ class GrpcClient extends BaseStub
 
         $result = $channel->pop(3.0);
         if ($result === false) {
-            throw new \RuntimeException('服务请求失败！');
+            throw new StatusRuntimeException('服务请求失败', StatusCode::UNKNOWN);
+        }
+        [$reply, $status] = $result;
+        if ($status !== 0) {
+            throw new StatusRuntimeException(urldecode($reply), $status);
         }
 
-        return $result;
+        return $reply;
     }
 
     /**
